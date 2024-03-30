@@ -1,0 +1,21 @@
+build:
+  gpu: false
+  python_version: "3.10"
+  run:
+    - apt update -y && apt install -y software-properties-common python3-launchpadlib && apt update -y && add-apt-repository -y ppa:git-core/ppa && apt update -y
+    - apt install -y gcc g++ aria2 git git-lfs wget libgl1 libglib2.0-0 ffmpeg cmake libgtk2.0-0 libopenmpi-dev unzip
+    - wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run && sh cuda_12.1.0_530.30.02_linux.run --silent --toolkit
+    - pip install -q torch==2.2.1+cu121 torchvision==0.17.1+cu121 torchaudio==2.2.1+cu121 torchtext==0.17.1 torchdata==0.7.1 --extra-index-url https://download.pytorch.org/whl/cu121 -U
+    - sed -i 's/return caster.operator typename make_caster<T>::template cast_op_type<T>();/return caster;/' /usr/local/lib/python3.10/site-packages/torch/include/pybind11/cast.h
+    - pip install notebook pyngrok pickleshare ipywidgets opencv-python diffusers==0.22.0 transformers==4.34.1 accelerate onnxruntime-gpu insightface
+    - GIT_LFS_SKIP_SMUDGE=1 git clone -b dev https://github.com/camenduru/Arc2Face-hf /content/Arc2Face-hf
+    - wget https://huggingface.co/camenduru/Arc2Face/resolve/main/freddie.png -O /content/Arc2Face-hf/assets/examples/freddie.png
+    - wget https://huggingface.co/camenduru/Arc2Face/resolve/main/jackie.png -O /content/Arc2Face-hf/assets/examples/jackie.png
+    - wget https://huggingface.co/camenduru/Arc2Face/resolve/main/joacquin.png -O /content/Arc2Face-hf/assets/examples/joacquin.png
+    - aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/camenduru/Arc2Face/resolve/main/antelopev2/arcface.onnx -d /content/Arc2Face-hf/models/antelopev2 -o arcface.onnx
+    - aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/camenduru/Arc2Face/resolve/main/antelopev2/scrfd_10g_bnkps.onnx -d /content/Arc2Face-hf/models/antelopev2 -o scrfd_10g_bnkps.onnx
+    - aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/camenduru/Arc2Face/raw/main/arc2face/config.json -d /content/Arc2Face-hf/models/arc2face -o config.json
+    - aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/camenduru/Arc2Face/resolve/main/arc2face/diffusion_pytorch_model.safetensors -d /content/Arc2Face-hf/models/arc2face -o diffusion_pytorch_model.safetensors
+    - aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/camenduru/Arc2Face/raw/main/encoder/config.json -d /content/Arc2Face-hf/models/encoder -o config.json
+    - aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/camenduru/Arc2Face/resolve/main/encoder/pytorch_model.bin -d /content/Arc2Face-hf/models/encoder -o pytorch_model.bin
+predict: "/src/predict.py:Predictor"
